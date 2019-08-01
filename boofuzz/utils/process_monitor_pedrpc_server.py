@@ -152,10 +152,10 @@ class ProcessMonitorPedrpcServer(pedrpc.Server):
 
         # check DUMP_FOLDER before starting target process
         dump_files = os.listdir(DUMP_FOLDER)
-        self.log("Find dump file in target dump folder, count=", len(dump_files))
+        self.log("Find dump file in target dump folder, count={}".format(len(dump_files)))
         for filename in dump_files:
             dump_file = os.path.join(DUMP_FOLDER, filename)
-            self.log("[*] Save dumpe file:", dump_file)
+            self.log("[*] Save dumpe file: {}".format(dump_file))
             shutil.move(dump_file, self.coredump_dir)
 
         self.log('Starting target...')
