@@ -11,15 +11,15 @@ class MinidumpAnalyzer:
         self.msg_map = {}
 
     def analyze_dump(self, dump_file):
-        cmd = '{} {}'.format(self.minidump_stackwalk, dump_file)
-        print('CMD:', cmd)
+        cmd = './{} {} 2>/dev/null'.format(self.minidump_stackwalk, dump_file)
+        # print('CMD:', cmd)
         output = os.popen(cmd).read()
         # Crash reason:  SIGABRT
         # Crash address: 0x3ea00005144
         msg = 'not_found'
         crash_reason = ''
         crash_addr = ''
-        for line in output:
+        for line in output.split('\n'):
             if 'Crash reason:' in line:
                 crash_reason = line[15:-1]
                 msg = ''
@@ -29,7 +29,7 @@ class MinidumpAnalyzer:
         if crash_reason != '':
             msg = crash_reason
         if crash_addr != '':
-            msg = msg + crash_addr
+            msg = msg + '_' + crash_addr
         return msg
     
     def analyze_folder(self, dump_folder):
