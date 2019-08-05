@@ -144,7 +144,7 @@ class Target(object):
             self._fuzz_data_logger.log_info("Sending {0} bytes...".format(len(data)))
 
         num_sent = self._target_connection.send(data=data)
-        print("[MD] Send {} bytes".format(num_sent))
+        print("[MD] Send {} real bytes".format(num_sent))
 
         if self._fuzz_data_logger is not None:
             self._fuzz_data_logger.log_send(data[:num_sent])
