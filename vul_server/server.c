@@ -18,7 +18,8 @@ void func(int sockfd)
         // read the message from client and copy it in buffer 
         int size = read(sockfd, buff, sizeof(buff)); 
         printf("Input buffer size is %d\n", size);
-        if (size > 70) {
+        if (size == 0) break;
+        if (size >= 50) {
             printf("trigger crash here.");
             char *mem = NULL;
             *mem = 0x41414141; 
