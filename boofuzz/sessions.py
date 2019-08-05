@@ -20,7 +20,7 @@ from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.wsgi import WSGIContainer
 
-from boofuzz import helpers
+from boofuzz import helpers, constants
 from . import (blocks, constants, event_hook, exception, fuzz_logger, fuzz_logger_curses, fuzz_logger_db,
                fuzz_logger_text, pgraph, primitives)
 from .web.app import app
@@ -144,7 +144,7 @@ class Target(object):
             self._fuzz_data_logger.log_info("Sending {0} bytes...".format(len(data)))
 
         num_sent = self._target_connection.send(data=data)
-        print("[MD] Send {} real bytes".format(num_sent))
+        self._fuzz_data_logger.log_info("[MD] Send {} real bytes".format(num_sent))
 
         if self._fuzz_data_logger is not None:
             self._fuzz_data_logger.log_send(data[:num_sent])
@@ -1350,12 +1350,12 @@ class Session(pgraph.Graph):
                 self.transmit_normal(target, node, e, callback_data=callback_data)
 
             callback_data = self._callback_current_node(node=self.fuzz_node, edge=path[-1])
-
             self._fuzz_data_logger.open_test_step("Node Under Test '{0}'".format(self.fuzz_node.name))
             self.transmit_normal(target, self.fuzz_node, path[-1], callback_data=callback_data)
 
             self._post_send(target)
             self._check_procmon_failures(target)
+
             if not self._reuse_target_connection:
                 target.close()
 
@@ -1371,6 +1371,12 @@ class Session(pgraph.Graph):
             self._stop_netmon(target)
             self._fuzz_data_logger.close_test_case()
             self.export_file()
+
+    def _save_current_test_case(self):
+        self._fuzz_data_logger.log_info("[MD] Find process crash or hang, backup test data...")
+        test_file = os.path.join(constants.RESULTS_DIR, '{}.bin'.format(self.total_mutant_index))
+        with open(test_file, 'wb') as fh:
+            fh.write(self.last_send)
 
     def _fuzz_current_case(self, path):
         """
@@ -1423,10 +1429,16 @@ class Session(pgraph.Graph):
             callback_data = self._callback_current_node(node=self.fuzz_node, edge=path[-1])
             self._fuzz_data_logger.open_test_step("Fuzzing Node '{0}'".format(self.fuzz_node.name))
             self.transmit_fuzz(target, self.fuzz_node, path[-1], callback_data=callback_data)
-
+            
+            self._fuzz_data_logger.log_info("[MD] Sleep 0.5s to check failures")
+            time.sleep(0.5)
             if not self._check_for_passively_detected_failures(target=target):
                 self._post_send(target)
-                self._check_procmon_failures(target=target)
+                if self._check_procmon_failures(target=target):
+                    self._save_current_test_case()
+            else:
+                self._save_current_test_case()
+
             if not self._reuse_target_connection:
                 target.close()
 
