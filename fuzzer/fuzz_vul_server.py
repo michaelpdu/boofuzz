@@ -1,3 +1,9 @@
+import os
+import sys
+fuzzer_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(fuzzer_dir)
+sys.path.append(root_dir)
+
 from boofuzz import *
 
 def main():
@@ -16,6 +22,7 @@ def main():
     s_initialize(name="Request")
     with s_block("Request-Line"):
         s_string("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", name='Request-URI')
+    s_static('\n')
 
     session.connect(s_get("Request"))
     session.fuzz()
