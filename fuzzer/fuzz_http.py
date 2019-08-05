@@ -1,12 +1,13 @@
 from boofuzz import *
+import argparse
 
-def main():
+def main(web_port):
     target_ip = "127.0.0.1"
     start_cmd = ['/home/staragent/plugins/logagent/logagent-collector', '--pull-mode']
     session = Session(
         target=Target(
             connection=SocketConnection(target_ip, 8182, proto='tcp'),
-            procmon=pedrpc.Client(target_ip, 26002),
+            procmon=pedrpc.Client(target_ip, web_port),
             procmon_options={"start_commands": [start_cmd]}
         ),
        sleep_time=1,
@@ -34,4 +35,8 @@ def main():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Command Usages')
+    parser.add_argument("-P", "--web_port", type=int, default=26002, help="port number")
+    args = parser.parse_args()
+    main(args.web_port)
     main()
