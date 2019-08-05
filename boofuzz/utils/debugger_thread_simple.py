@@ -18,6 +18,8 @@ import time
 import psutil
 from io import open
 
+DUMP_FOLDER = "/home/staragent/plugins/logagent.src/logagent.cur/local_data/dmp/pull-mode/"
+
 if not getattr(__builtins__, "WindowsError", None):
     class WindowsError(OSError):
         """Mock WindowsError since Linux Python lacks WindowsError"""
@@ -26,11 +28,9 @@ if not getattr(__builtins__, "WindowsError", None):
             return self.errno
         pass
 
-
 def _enumerate_processes():
     for pid in psutil.pids():
         yield (pid, psutil.Process(pid).name())
-
 
 def _get_coredump_path():
     """
@@ -40,9 +40,27 @@ def _get_coredump_path():
         path = './core'
         if os.path.isfile(path):
             return path
-
     return None
 
+def _clean_dump_folder():
+    dump_files = os.listdir(DUMP_FOLDER)
+    print("Find minidump file in target dump folder, count={}".format(len(dump_files)))
+    print('Try to clean ...')
+    for filename in dump_files:
+        os.remove(os.path.join(DUMP_FOLDER, filename))
+
+def _get_minidump_path():
+    """
+    This method returns the path to the minidump of logagent if one was created
+    """
+    
+    # check DUMP_FOLDER before starting target process
+    dump_files = os.listdir(DUMP_FOLDER)
+    print("Find dump file in target dump folder, count={}".format(len(dump_files)))
+    for filename in dump_files:
+        dump_file = os.path.join(DUMP_FOLDER, filename)
+        return dump_file
+    return None
 
 class DebuggerThreadSimple(threading.Thread):
     def __init__(self, start_commands, process_monitor,
@@ -114,6 +132,9 @@ class DebuggerThreadSimple(threading.Thread):
         while self.exit_status == (0, 0):
             self.exit_status = os.waitpid(self.pid, os.WNOHANG | os.WUNTRACED)
         """
+        # clean minidump files from DUMP_FOLDER
+        _clean_dump_folder()
+
         self.spawn_target()
 
         self.finished_starting.set()
@@ -180,16 +201,22 @@ class DebuggerThreadSimple(threading.Thread):
             bool: True if the target is still active, False otherwise.
         """
         if self.isAlive():
+            self.log("[MD] Process is alive.")
             return True
         else:
+            self.log("[MD] Process is dead.")
             with open(self.process_monitor.crash_filename, 'a') as rec_file:
                 rec_file.write(self.process_monitor.last_synopsis.decode())
 
             if self.process_monitor.coredump_dir is not None:
                 dest = os.path.join(self.process_monitor.coredump_dir, str(self.process_monitor.test_number))
                 src = _get_coredump_path()
-
                 if src is not None:
-                    self.log("moving core dump %s -> %s" % (src, dest))
-                    os.rename(src, dest)
+                    self.log("moving core dump %s -> %s" % (src, dest+'.core'))
+                    os.rename(src, dest+'.core')
+                # try to get minidump
+                src = _get_minidump_path()
+                if src is not None:
+                    self.log("moving core dump %s -> %s" % (src, dest+'.dmp'))
+                    os.rename(src, dest+'.dmp')
             return False

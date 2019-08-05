@@ -10,8 +10,6 @@ from past.builtins import map
 
 from boofuzz import pedrpc, utils
 
-DUMP_FOLDER = "/home/staragent/plugins/logagent.src/logagent.cur/local_data/dmp/pull-mode/"
-
 def _split_command_if_str(command):
     """Splits a shell command string into a list of arguments.
 
@@ -149,14 +147,6 @@ class ProcessMonitorPedrpcServer(pedrpc.Server):
 
         @returns True if successful.
         """
-
-        # check DUMP_FOLDER before starting target process
-        dump_files = os.listdir(DUMP_FOLDER)
-        self.log("Find dump file in target dump folder, count={}".format(len(dump_files)))
-        for filename in dump_files:
-            dump_file = os.path.join(DUMP_FOLDER, filename)
-            self.log("[*] Save dumpe file: {}".format(dump_file))
-            shutil.move(dump_file, self.coredump_dir)
 
         self.log('Starting target...')
         self.log("creating debugger thread", 5)
