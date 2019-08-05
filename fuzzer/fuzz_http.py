@@ -1,6 +1,9 @@
 from boofuzz import *
 import argparse
 
+def check_logagent_status(target, fuzz_data_logger, session, sock):
+    fuzz_data_logger.log_info("[MD] Check logagent status.")
+
 def main(web_port):
     target_ip = "127.0.0.1"
     start_cmd = ['/home/staragent/plugins/logagent/logagent-collector', '--pull-mode']
@@ -11,7 +14,11 @@ def main(web_port):
             procmon_options={"start_commands": [start_cmd]}
         ),
        sleep_time=1,
+       # post_test_case_callbacks = [check_logagent_status]
     )
+
+    # register post_test_case_callbacks
+    session.register_post_test_case_callback(check_logagent_status)
 
     s_initialize(name="Request")
     with s_block("Request-Line"):
