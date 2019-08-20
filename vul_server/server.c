@@ -63,7 +63,7 @@ int main()
         exit(0); 
     } 
     else
-        printf("Server listening..\n"); 
+        printf("Server listening at port 8901..\n"); 
     len = sizeof(cli); 
 
     // Accept the data packet from client and verification 
@@ -80,5 +80,32 @@ int main()
 
     // After chatting close the socket 
     close(sockfd); 
+
+    //
+
+    fd_set rd;
+    struct timeval tv;
+    int err;
+    
+    FD_ZERO(&rd);
+    FD_SET(0,&rd);
+    
+    tv.tv_sec = 10;
+    tv.tv_usec = 0;
+    err = select(1,&rd,NULL,NULL,&tv);
+    
+    if(err == 0) //超时
+    {
+        printf("select time out!\n");
+    }
+    else if(err == -1)  //失败
+    {
+        printf("fail to select!\n");
+    }
+    else  //成功
+    {
+        printf("data is available!\n");
+    }
+
 } 
 
