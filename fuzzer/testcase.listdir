@@ -1,0 +1,1 @@
+GET /?action=listDir&dir=/home/staragent/plugins/logagent/local_data/ HTTP/1.1

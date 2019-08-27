@@ -1,0 +1,1 @@
+GET /tail?file=/home/staragent/plugins/logagent/.plugin.conf&begin=0&end=200 HTTP/1.1

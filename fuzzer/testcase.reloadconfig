@@ -1,0 +1,1 @@
+GET /inner?type=ReloadConfig HTTP/1.1

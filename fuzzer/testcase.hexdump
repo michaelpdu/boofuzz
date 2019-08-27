@@ -1,0 +1,1 @@
+GET /?action=hexdump&file=/home/staragent/plugins/logagent/local_data/monitor-2019-06-07T21-33-38.267.log,0,200 HTTP/1.1
